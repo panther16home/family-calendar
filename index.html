@@ -67,7 +67,7 @@
       <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="font-bold ml-2">✕</button>
     </div>
 
-    <!-- Hlavička sloupců se členy: Barča, Mamka, Táta -->
+    <!-- Hlavička sloupců: Barča, Mamka, Táta -->
     <div class="grid grid-cols-[90px_repeat(3,1fr)] sm:grid-cols-[140px_repeat(3,1fr)] bg-slate-100 border-b-2 border-slate-400 font-extrabold text-xs sm:text-sm sticky top-[73px] sm:top-[77px] z-20 shadow-md text-slate-800">
       <div class="p-3 text-center border-r-2 border-slate-300 bg-slate-200/80 flex items-center justify-center tracking-wider uppercase text-[11px] text-slate-600 font-black">Den</div>
       <div class="p-3 text-center border-r-2 border-slate-300 bg-violet-100/90 text-violet-950 flex items-center justify-center gap-2">
@@ -89,39 +89,70 @@
 
   <!-- Modální okno pro novou událost -->
   <div id="eventModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border-2 border-slate-200 transform transition-all">
-      <div class="flex items-center justify-between mb-2">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border-2 border-slate-200 transform transition-all">
+      <div class="flex items-center justify-between mb-1">
         <h3 class="text-lg font-extrabold text-slate-900" id="modalTitle">Nová událost</h3>
         <button type="button" id="closeModalCross" class="text-slate-400 hover:text-slate-700 text-xl font-bold p-1">✕</button>
       </div>
-      <p class="text-xs font-bold text-slate-400 mb-4" id="modalSubtitle">Vyberte podrobnosti</p>
+      <p class="text-xs font-bold text-slate-400 mb-3.5" id="modalSubtitle">Vyberte podrobnosti</p>
       
       <form id="eventForm" class="space-y-3.5">
         <input type="hidden" id="modalDate">
-        <input type="hidden" id="modalPerson">
 
         <div>
-          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Popis / Plán</label>
+          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Popis / Plán</label>
           <input type="text" id="eventTitle" placeholder="např. Trénink, Zubař, Kroužek, Oslava..." required autofocus
                  class="w-full border-2 border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <!-- Výběr zúčastněných členů rodiny -->
+        <div class="p-3 bg-slate-100/80 rounded-2xl border-2 border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">👥 Kdo se účastní</label>
+            <button type="button" id="selectAllMembersBtn" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition">Celá rodina</button>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-2">
+            <!-- Barča -->
+            <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border-2 cursor-pointer transition select-none has-[:checked]:bg-violet-100 has-[:checked]:border-violet-400 has-[:checked]:text-violet-950 bg-white border-slate-200 text-slate-600">
+              <input type="checkbox" name="membersCheck" value="barca" class="rounded text-violet-600 focus:ring-violet-500 w-3.5 h-3.5">
+              <span class="text-xs font-bold">Barča</span>
+            </label>
+            <!-- Mamka -->
+            <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border-2 cursor-pointer transition select-none has-[:checked]:bg-rose-100 has-[:checked]:border-rose-400 has-[:checked]:text-rose-950 bg-white border-slate-200 text-slate-600">
+              <input type="checkbox" name="membersCheck" value="mama" class="rounded text-rose-600 focus:ring-rose-500 w-3.5 h-3.5">
+              <span class="text-xs font-bold">Mamka</span>
+            </label>
+            <!-- Táta -->
+            <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border-2 cursor-pointer transition select-none has-[:checked]:bg-sky-100 has-[:checked]:border-sky-400 has-[:checked]:text-sky-950 bg-white border-slate-200 text-slate-600">
+              <input type="checkbox" name="membersCheck" value="tata" class="rounded text-sky-600 focus:ring-sky-500 w-3.5 h-3.5">
+              <span class="text-xs font-bold">Táta</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Čas začátku a konce -->
+        <div class="grid grid-cols-2 gap-2.5">
           <div>
-            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Čas (nepovinné)</label>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Od (začátek)</label>
             <input type="time" id="eventTime" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Štítek / Typ</label>
-            <select id="eventTag" class="w-full border-2 border-slate-200 rounded-xl px-2 py-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
-              <option value="general">📍 Běžné</option>
-              <option value="sport">🏒 Sport / Trénink</option>
-              <option value="school">🎒 Škola / Kroužek</option>
-              <option value="doctor">🩺 Lékař / Zubař</option>
-              <option value="work">💼 Práce</option>
-              <option value="fun">🎉 Výlet / Oslava</option>
-            </select>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Do (konec)</label>
+            <input type="time" id="eventEndTime" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
           </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Štítek / Typ</label>
+          <select id="eventTag" class="w-full border-2 border-slate-200 rounded-xl px-2 py-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
+            <option value="general">📍 Běžné</option>
+            <option value="sport">🏒 Sport / Trénink</option>
+            <option value="school">🎒 Škola / Kroužek</option>
+            <option value="doctor">🩺 Lékař / Zubař</option>
+            <option value="work">💼 Práce</option>
+            <option value="fun">🎉 Výlet / Oslava</option>
+          </select>
         </div>
 
         <!-- Opakování aktivity -->
@@ -133,22 +164,11 @@
             <option value="workdays">Každý všední den (Po–Pá)</option>
           </select>
 
-          <div id="repeatWeeksWrapper" class="hidden flex items-center justify-between text-xs pt-1.5 border-t border-slate-200">
-            <span class="text-slate-700 font-bold">Doba trvání:</span>
-            <select id="repeatCount" class="border-2 border-slate-300 rounded-lg px-2 py-1 text-xs bg-white focus:outline-none font-bold text-slate-800">
-              <option value="4">4 týdny (1 měsíc)</option>
-              <option value="8">8 týdnů (2 měsíce)</option>
-              <option value="12" selected>12 týdnů (3 měsíce)</option>
-              <option value="20">20 týdnů (pololetí)</option>
-            </select>
+          <!-- Volba data "DO KDY" -->
+          <div id="repeatUntilWrapper" class="hidden flex items-center justify-between text-xs pt-1.5 border-t border-slate-200">
+            <span class="text-slate-700 font-bold">Opakovat do:</span>
+            <input type="date" id="repeatUntilDate" class="border-2 border-slate-300 rounded-lg px-2.5 py-1 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800">
           </div>
-        </div>
-
-        <div class="pt-0.5">
-          <label class="inline-flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" id="eventIsFamily" class="rounded border-slate-400 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
-            <span class="text-xs font-bold text-slate-700">Týká se celé rodiny (společné)</span>
-          </label>
         </div>
 
         <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
@@ -175,7 +195,6 @@
       "Prefer": "return=representation"
     };
 
-    // Nové pořadí členů: Barča, Mamka, Táta
     const members = [
       { id: 'barca', name: 'Barča', color: 'violet' },
       { id: 'mama', name: 'Mamka', color: 'rose' },
@@ -208,21 +227,28 @@
     const modalTitle = document.getElementById('modalTitle');
     const modalSubtitle = document.getElementById('modalSubtitle');
     const modalDate = document.getElementById('modalDate');
-    const modalPerson = document.getElementById('modalPerson');
     const eventTitle = document.getElementById('eventTitle');
     const eventTime = document.getElementById('eventTime');
+    const eventEndTime = document.getElementById('eventEndTime');
     const eventTag = document.getElementById('eventTag');
     const eventRepeat = document.getElementById('eventRepeat');
-    const repeatWeeksWrapper = document.getElementById('repeatWeeksWrapper');
-    const repeatCount = document.getElementById('repeatCount');
-    const eventIsFamily = document.getElementById('eventIsFamily');
+    const repeatUntilWrapper = document.getElementById('repeatUntilWrapper');
+    const repeatUntilDate = document.getElementById('repeatUntilDate');
     const saveEventBtn = document.getElementById('saveEventBtn');
+    const selectAllMembersBtn = document.getElementById('selectAllMembersBtn');
+
+    // Tlačítko Celá rodina (vybere všechny / zruší)
+    selectAllMembersBtn.addEventListener('click', () => {
+      const checkboxes = document.querySelectorAll('input[name="membersCheck"]');
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+      checkboxes.forEach(cb => cb.checked = !allChecked);
+    });
 
     eventRepeat.addEventListener('change', () => {
       if (eventRepeat.value !== 'none') {
-        repeatWeeksWrapper.classList.remove('hidden');
+        repeatUntilWrapper.classList.remove('hidden');
       } else {
-        repeatWeeksWrapper.classList.add('hidden');
+        repeatUntilWrapper.classList.add('hidden');
       }
     });
 
@@ -231,6 +257,11 @@
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
+    }
+
+    function formatTimeDisplay(timeStr) {
+      if (!timeStr) return '';
+      return timeStr.replace(' - ', '–');
     }
 
     function renderCalendar() {
@@ -277,6 +308,7 @@
           const cell = document.createElement('div');
           cell.className = "p-2 border-r-2 border-slate-300 last:border-r-0 flex flex-col gap-1.5 relative group hover:bg-slate-200/40 transition cursor-pointer";
 
+          // Zobrazit událost pro danou osobu, nebo pokud byla historicky uložena jako 'all'
           const memberEvents = dayEvents.filter(ev => ev.person === m.id || ev.person === 'all');
           memberEvents.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
 
@@ -295,9 +327,11 @@
 
             evEl.className = `text-[11px] sm:text-xs px-2.5 py-1.5 rounded-xl flex items-center justify-between gap-1 group/item transition-all hover:scale-[1.01] ${colorClasses}`;
             
+            const timeLabel = formatTimeDisplay(ev.time);
+
             evEl.innerHTML = `
               <div class="truncate flex items-center gap-1.5">
-                ${ev.time ? `<span class="font-black opacity-90">${ev.time}</span>` : ''}
+                ${timeLabel ? `<span class="font-black opacity-90 shrink-0 text-[10px] sm:text-[11px] bg-black/5 px-1 rounded">${timeLabel}</span>` : ''}
                 <span class="truncate">${isFamily ? '⭐ ' : ''}${ev.title}</span>
               </div>
               <button data-id="${ev.id}" class="text-slate-500 hover:text-rose-700 opacity-0 group-hover/item:opacity-100 transition px-1 font-black no-print">✕</button>
@@ -380,14 +414,24 @@
 
     function openModal(dateKey, member, dateObj) {
       modalDate.value = dateKey;
-      modalPerson.value = member.id;
-      modalTitle.textContent = `Nová událost: ${member.name}`;
+      modalTitle.textContent = `Nová událost pro: ${member.name}`;
       modalSubtitle.textContent = `${daysNames[dateObj.getDay()]} ${dateObj.getDate()}. ${monthsNames[dateObj.getMonth()]}`;
       eventTitle.value = '';
       eventTime.value = '';
+      eventEndTime.value = '';
       eventRepeat.value = 'none';
-      repeatWeeksWrapper.classList.add('hidden');
-      eventIsFamily.checked = false;
+      repeatUntilWrapper.classList.add('hidden');
+
+      // Předvybrat člena, na jehož sloupec bylo kliknuto
+      document.querySelectorAll('input[name="membersCheck"]').forEach(cb => {
+        cb.checked = (cb.value === member.id);
+      });
+
+      const defaultUntil = new Date(dateObj);
+      defaultUntil.setMonth(defaultUntil.getMonth() + 2);
+      repeatUntilDate.value = formatDateKey(defaultUntil);
+      repeatUntilDate.min = dateKey;
+
       eventModal.classList.remove('hidden');
       eventModal.classList.add('flex');
       setTimeout(() => eventTitle.focus(), 60);
@@ -401,41 +445,80 @@
     eventForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const baseDateStr = modalDate.value;
-      const person = eventIsFamily.checked ? 'all' : modalPerson.value;
       const title = eventTitle.value.trim();
-      const time = eventTime.value;
+      const startTime = eventTime.value;
+      const endTime = eventEndTime.value;
+
+      // Zjistit vybrané členy rodiny
+      const selectedMembers = Array.from(document.querySelectorAll('input[name="membersCheck"]:checked'))
+        .map(cb => cb.value);
+
+      if (selectedMembers.length === 0) {
+        alert("Prosím vyber alespoň jednoho člena rodiny, který se účastní.");
+        return;
+      }
+
+      let combinedTime = '';
+      if (startTime && endTime) {
+        combinedTime = `${startTime}–${endTime}`;
+      } else if (startTime) {
+        combinedTime = startTime;
+      } else if (endTime) {
+        combinedTime = `do ${endTime}`;
+      }
+
       const tag = eventTag.value;
       const repeatMode = eventRepeat.value;
-      const weeks = parseInt(repeatCount.value, 10) || 12;
+      const untilDateStr = repeatUntilDate.value;
 
       if (!title) return;
 
       saveEventBtn.disabled = true;
       saveEventBtn.textContent = 'Ukládám...';
 
-      const newItems = [];
+      // Sestavení seznamu termínů (dnů)
+      const datesToCreate = [];
       const [year, month, day] = baseDateStr.split('-').map(Number);
       const startD = new Date(year, month - 1, day);
 
       if (repeatMode === 'none') {
-        newItems.push({ date: baseDateStr, person, title, time, tag });
-      } else if (repeatMode === 'weekly') {
-        for (let w = 0; w < weeks; w++) {
-          const nextDate = new Date(startD);
-          nextDate.setDate(startD.getDate() + (w * 7));
-          newItems.push({ date: formatDateKey(nextDate), person, title, time, tag });
-        }
-      } else if (repeatMode === 'workdays') {
-        const totalDays = weeks * 7;
-        for (let d = 0; d < totalDays; d++) {
-          const nextDate = new Date(startD);
-          nextDate.setDate(startD.getDate() + d);
-          const dayOfWeek = nextDate.getDay();
-          if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-            newItems.push({ date: formatDateKey(nextDate), person, title, time, tag });
+        datesToCreate.push(baseDateStr);
+      } else {
+        const [uYear, uMonth, uDay] = (untilDateStr || baseDateStr).split('-').map(Number);
+        const untilD = new Date(uYear, uMonth - 1, uDay);
+        untilD.setHours(23, 59, 59, 999);
+
+        let currD = new Date(startD);
+
+        if (repeatMode === 'weekly') {
+          while (currD <= untilD) {
+            datesToCreate.push(formatDateKey(currD));
+            currD.setDate(currD.getDate() + 7);
+          }
+        } else if (repeatMode === 'workdays') {
+          while (currD <= untilD) {
+            const dayOfWeek = currD.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+              datesToCreate.push(formatDateKey(currD));
+            }
+            currD.setDate(currD.getDate() + 1);
           }
         }
       }
+
+      // Vytvořit položky pro každého vybraného člena a každý den
+      const newItems = [];
+      datesToCreate.forEach(dStr => {
+        selectedMembers.forEach(personId => {
+          newItems.push({
+            date: dStr,
+            person: personId,
+            title: title,
+            time: combinedTime,
+            tag: tag
+          });
+        });
+      });
 
       try {
         const res = await fetch(`${SUPABASE_BASE}/family_events`, {
