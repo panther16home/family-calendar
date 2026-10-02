@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Supabase JS Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Nejnovější Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
     @media print {
@@ -34,9 +34,9 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">Rodinný Kalendář</h1>
-            <!-- Stav online připojení -->
+            <!-- Stav připojení -->
             <span id="syncIndicator" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
-              <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Připojuji...
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Kontrola spojení...
             </span>
           </div>
           <p class="text-xs sm:text-sm font-semibold text-slate-500" id="currentRangeLabel">Plánování</p>
@@ -63,6 +63,12 @@
       </div>
     </header>
 
+    <!-- Chybový proužek (skrytý, zobrazí se jen při chybě) -->
+    <div id="errorBanner" class="hidden bg-rose-50 border-b border-rose-200 px-4 py-2 text-xs text-rose-700 flex items-center justify-between">
+      <span id="errorMessage">Chyba</span>
+      <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="font-bold ml-2">✕</button>
+    </div>
+
     <!-- Hlavička sloupců se členy -->
     <div class="grid grid-cols-[85px_repeat(3,1fr)] sm:grid-cols-[130px_repeat(3,1fr)] bg-slate-50/90 backdrop-blur-md border-b border-slate-200 font-bold text-xs sm:text-sm sticky top-[73px] sm:top-[77px] z-20 shadow-sm text-slate-700">
       <div class="p-3 text-center border-r border-slate-200 bg-slate-100/60 flex items-center justify-center tracking-wider uppercase text-[11px] text-slate-400">Den</div>
@@ -79,7 +85,7 @@
 
     <!-- Mřížka kalendáře -->
     <div id="calendarGrid" class="divide-y divide-slate-100 flex-1 overflow-y-auto print-border">
-      <!-- Dny se vykreslují ihned -->
+      <!-- Dny se vykreslí okamžitě -->
     </div>
   </div>
 
@@ -120,7 +126,6 @@
           </div>
         </div>
 
-        <!-- Možnost nastavit jako společnou rodinnou událost -->
         <div class="pt-1">
           <label class="inline-flex items-center gap-2 cursor-pointer">
             <input type="checkbox" id="eventIsFamily" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
@@ -139,19 +144,24 @@
   </div>
 
   <script>
-    // ==========================================
-    // ⚙️ KONFIGURACE SUPABASE
-    // ==========================================
     const SUPABASE_URL = "https://pdricsmhdtjldrbgbvej.supabase.co"; 
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkcmljc21oZHRqbGRyYmdidmVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NjgxNjUsImV4cCI6MjEwNjU0NDE2NX0.LP2-9jFVLIAps7cJ5LuegfzZ2KBBUmWE2ltwgmE8SAE";
+    const SUPABASE_ANON_KEY = "sb_publishable_Z6DQs--ri696vewu-PiR3A_Hj0M37OT";
 
     let supabase = null;
     try {
-      if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      if (window.supabase) {
+        // Inicializace s explicitním předáním apikey hlavičky pro novou specifikaci
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          global: {
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+            }
+          }
+        });
       }
     } catch (err) {
-      console.error("Chyba inicializace Supabase:", err);
+      console.error("Chyba při tvorbě Supabase klienta:", err);
     }
 
     const members = [
@@ -169,7 +179,6 @@
     const daysNames = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
     const monthsNames = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
 
-    // DOM Prvky
     const calendarGrid = document.getElementById('calendarGrid');
     const currentRangeLabel = document.getElementById('currentRangeLabel');
     const viewDaysSelect = document.getElementById('viewDays');
@@ -177,6 +186,8 @@
     const nextBtn = document.getElementById('nextBtn');
     const todayBtn = document.getElementById('todayBtn');
     const syncIndicator = document.getElementById('syncIndicator');
+    const errorBanner = document.getElementById('errorBanner');
+    const errorMessage = document.getElementById('errorMessage');
 
     const eventModal = document.getElementById('eventModal');
     const eventForm = document.getElementById('eventForm');
@@ -199,7 +210,6 @@
       return `${year}-${month}-${day}`;
     }
 
-    // --- VYKRESLENÍ KALENDÁŘE (BĚŽÍ OKAMŽITĚ) ---
     function renderCalendar() {
       calendarGrid.innerHTML = '';
 
@@ -290,31 +300,41 @@
       }
     }
 
-    // --- NAČÍTÁNÍ ZE SUPABASE ---
     async function loadEvents() {
       if (!supabase) {
-        setIndicator('Offline / Lokální', 'amber');
-        eventsList = JSON.parse(localStorage.getItem('family_events_demo') || '[]');
+        setIndicator('Offline režim', 'amber');
+        eventsList = JSON.parse(localStorage.getItem('family_events_local') || '[]');
         renderCalendar();
         return;
       }
 
       try {
-        const { data, error } = await supabase.from('family_events').select('*');
+        // Přidán 6sekundový timeout, aby kalendář nikdy nezamrzl
+        const queryPromise = supabase.from('family_events').select('*');
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Časový limit vypršel")), 6000));
+        
+        const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+
         if (error) {
-          console.warn("Chyba při stahování ze Supabase:", error);
-          setIndicator('Chyba DB (lokální)', 'rose');
-          eventsList = JSON.parse(localStorage.getItem('family_events_demo') || '[]');
+          showError(`Chyba Supabase: ${error.message} (kód: ${error.code || 'neznamy'})`);
+          setIndicator('Chyba DB (lokální režim)', 'rose');
+          eventsList = JSON.parse(localStorage.getItem('family_events_local') || '[]');
         } else {
           eventsList = data || [];
           setIndicator('Live', 'emerald');
+          errorBanner.classList.add('hidden');
         }
       } catch (err) {
-        console.error("Síťová chyba:", err);
+        showError(`Připojení selhalo: ${err.message}. Zkontroluj prosím RLS pravidla v Supabase.`);
         setIndicator('Chyba spojení', 'rose');
-        eventsList = JSON.parse(localStorage.getItem('family_events_demo') || '[]');
+        eventsList = JSON.parse(localStorage.getItem('family_events_local') || '[]');
       }
       renderCalendar();
+    }
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      errorBanner.classList.remove('hidden');
     }
 
     function setIndicator(text, color) {
@@ -334,13 +354,13 @@
       if (!supabase) return;
       try {
         supabase
-          .channel('family_events_channel')
+          .channel('public:family_events')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'family_events' }, () => {
             loadEvents();
           })
           .subscribe();
       } catch (e) {
-        console.warn("Realtime se nepodařilo připojit:", e);
+        console.warn("Realtime listener selhal:", e);
       }
     }
 
@@ -375,28 +395,30 @@
       saveEventBtn.disabled = true;
       saveEventBtn.textContent = 'Ukládám...';
 
-      let saved = false;
+      let synced = false;
       if (supabase) {
         try {
           const { error } = await supabase.from('family_events').insert([{ date, person, title, time, tag }]);
-          if (!error) saved = true;
-          else console.warn("Supabase insert chyba:", error);
+          if (!error) {
+            synced = true;
+          } else {
+            showError(`Ukládání do DB selhalo: ${error.message}`);
+          }
         } catch (err) {
-          console.warn("Chyba při zápisu do DB:", err);
+          showError(`Ukládání selhalo: ${err.message}`);
         }
       }
 
-      if (!saved) {
-        // Fallback pro lokální uložení, aby aplikace nezamrzla
+      if (!synced) {
         eventsList.push({ id: Date.now().toString(), date, person, title, time, tag });
-        localStorage.setItem('family_events_demo', JSON.stringify(eventsList));
+        localStorage.setItem('family_events_local', JSON.stringify(eventsList));
         renderCalendar();
       }
 
       saveEventBtn.disabled = false;
       saveEventBtn.textContent = 'Uložit';
       closeModal();
-      if (supabase && saved) loadEvents();
+      if (supabase && synced) loadEvents();
     });
 
     async function deleteEvent(id) {
@@ -404,12 +426,13 @@
         try {
           await supabase.from('family_events').delete().eq('id', id);
         } catch (e) {
-          console.warn("Chyba při mazání v DB:", e);
+          console.warn("Chyba při mazání:", e);
         }
       }
       eventsList = eventsList.filter(ev => ev.id !== id);
-      localStorage.setItem('family_events_demo', JSON.stringify(eventsList));
+      localStorage.setItem('family_events_local', JSON.stringify(eventsList));
       renderCalendar();
+      if (supabase) loadEvents();
     }
 
     cancelModalBtn.addEventListener('click', closeModal);
@@ -421,9 +444,8 @@
     todayBtn.addEventListener('click', () => { startDate = new Date(); startDate.setHours(0,0,0,0); renderCalendar(); });
     viewDaysSelect.addEventListener('change', (e) => { daysCount = parseInt(e.target.value, 10); renderCalendar(); });
 
-    // 1. Okamžité vykreslení prázdného kalendáře
+    // Okamžité vykreslení + načtení dat
     renderCalendar();
-    // 2. Načtení dat a realtime odběr
     loadEvents();
     subscribeToRealtime();
   </script>
