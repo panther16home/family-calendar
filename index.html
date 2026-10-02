@@ -10,8 +10,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Supabase JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
     @media print {
@@ -35,8 +33,8 @@
           <div class="flex items-center gap-2">
             <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">Rodinný Kalendář</h1>
             <!-- Stav připojení -->
-            <span id="syncIndicator" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
-              <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Připojuji...
+            <span id="syncIndicator" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Načítám...
             </span>
           </div>
           <p class="text-xs sm:text-sm font-semibold text-slate-500" id="currentRangeLabel">Plánování</p>
@@ -58,7 +56,7 @@
         </select>
 
         <button onclick="window.print()" title="Vytisknout na ledničku" class="p-2 sm:px-3 sm:py-2 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl bg-slate-50 hover:bg-white text-slate-700 shadow-sm transition flex items-center gap-1.5">
-          <span>🖨</span> <span class="hidden md:inline">Tisk</span>
+          <span>🖨️️</span> <span class="hidden md:inline">Tisk</span>
         </button>
       </div>
     </header>
@@ -85,11 +83,11 @@
 
     <!-- Mřížka kalendáře -->
     <div id="calendarGrid" class="divide-y divide-slate-100 flex-1 overflow-y-auto print-border">
-      <!-- Dny -->
+      <!-- Dny se vykreslí hned -->
     </div>
   </div>
 
-  <!-- Modální okno pro událost -->
+  <!-- Modální okno pro novou událost -->
   <div id="eventModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-slate-100 transform transition-all">
       <div class="flex items-center justify-between mb-2">
@@ -104,7 +102,7 @@
 
         <div>
           <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Popis / Plán</label>
-          <input type="text" id="eventTitle" placeholder="např. Trénink hokeje, Flétna, Kroužek..." required autofocus
+          <input type="text" id="eventTitle" placeholder="např. Trénink, Zubař, Kroužek, Oslava..." required autofocus
                  class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
         </div>
 
@@ -135,7 +133,6 @@
             <option value="workdays">Každý všední den (Po–Pá)</option>
           </select>
 
-          <!-- Výběr počtu týdnů (zobrazí se při opakování) -->
           <div id="repeatWeeksWrapper" class="hidden flex items-center justify-between text-xs pt-1 border-t border-slate-200">
             <span class="text-slate-600 font-medium">Opakovat po dobu:</span>
             <select id="repeatCount" class="border border-slate-200 rounded-lg px-2 py-1 text-xs bg-white focus:outline-none font-semibold text-slate-700">
@@ -166,19 +163,17 @@
 
   <script>
     // ==========================================
-    // ⚙️ KONFIGURACE SUPABASE
+    // ⚙️ PŘÍMÉ REST ROZHRANÍ PRO SUPABASE
     // ==========================================
-    const SUPABASE_URL = "https://pdricsmhdtjldrbgbvej.supabase.co"; 
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkcmljc21oZHRqbGRyYmdidmVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NjgxNjUsImV4cCI6MjEwNjU0NDE2NX0.LP2-9jFVLIAps7cJ5LuegfzZ2KBBUmWE2ltwgmE8SAE";
+    const SUPABASE_BASE = "https://pdricsmhdtjldrbgbvej.supabase.co/rest/v1"; 
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkcmljc21oZHRqbGRyYmdidmVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NjgxNjUsImV4cCI6MjEwNjU0NDE2NX0.LP2-9jFVLIAps7cJ5LuegfzZ2KBBUmWE2ltwgmE8SAE";
 
-    let supabase = null;
-    try {
-      if (window.supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      }
-    } catch (err) {
-      console.error("Chyba při tvorbě Supabase klienta:", err);
-    }
+    const reqHeaders = {
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY,
+      "Content-Type": "application/json",
+      "Prefer": "return=representation"
+    };
 
     const members = [
       { id: 'tata', name: 'Táta', color: 'sky' },
@@ -222,7 +217,6 @@
     const eventIsFamily = document.getElementById('eventIsFamily');
     const saveEventBtn = document.getElementById('saveEventBtn');
 
-    // Přepínání viditelnosti počtu týdnů
     eventRepeat.addEventListener('change', () => {
       if (eventRepeat.value !== 'none') {
         repeatWeeksWrapper.classList.remove('hidden');
@@ -328,30 +322,37 @@
       }
     }
 
+    // --- PŘÍMÉ VOLÁNÍ API ---
     async function loadEvents() {
-      if (!supabase) {
-        setIndicator('Offline režim', 'amber');
-        eventsList = JSON.parse(localStorage.getItem('family_events_local') || '[]');
-        renderCalendar();
-        return;
-      }
-
       try {
-        const { data, error } = await supabase.from('family_events').select('*');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-        if (error) {
-          showError(`Chyba Supabase: ${error.message}`);
-          setIndicator('Chyba DB', 'rose');
-          eventsList = JSON.parse(localStorage.getItem('family_events_local') || '[]');
-        } else {
-          eventsList = data || [];
-          setIndicator('Live', 'emerald');
-          errorBanner.classList.add('hidden');
+        const res = await fetch(`${SUPABASE_BASE}/family_events?select=*`, {
+          headers: reqHeaders,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`HTTP ${res.status}: ${errText}`);
         }
+
+        const data = await res.json();
+        eventsList = data || [];
+        setIndicator('Live', 'emerald');
+        errorBanner.classList.add('hidden');
       } catch (err) {
-        showError(`Chyba sítě: ${err.message}`);
-        setIndicator('Chyba spojení', 'rose');
-        eventsList = JSON.parse(localStorage.getItem('family_events_local') || '[]');
+        if (eventsList.length === 0) {
+          eventsList = JSON.parse(localStorage.getItem('family_events_local') || '[]');
+        }
+        if (err.name === 'AbortError') {
+          setIndicator('Pomalá síť (offline)', 'amber');
+        } else {
+          showError(`Stav připojení: ${err.message}`);
+          setIndicator('Lokální režim', 'rose');
+        }
       }
       renderCalendar();
     }
@@ -371,20 +372,6 @@
       } else {
         syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> ${text}`;
         syncIndicator.className = 'flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200';
-      }
-    }
-
-    function subscribeToRealtime() {
-      if (!supabase) return;
-      try {
-        supabase
-          .channel('public:family_events')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'family_events' }, () => {
-            loadEvents();
-          })
-          .subscribe();
-      } catch (e) {
-        console.warn("Realtime listener selhal:", e);
       }
     }
 
@@ -423,7 +410,6 @@
       saveEventBtn.disabled = true;
       saveEventBtn.textContent = 'Ukládám...';
 
-      // Příprava seznamu termínů k vytvoření
       const newItems = [];
       const [year, month, day] = baseDateStr.split('-').map(Number);
       const startD = new Date(year, month - 1, day);
@@ -431,40 +417,38 @@
       if (repeatMode === 'none') {
         newItems.push({ date: baseDateStr, person, title, time, tag });
       } else if (repeatMode === 'weekly') {
-        // Opakovat každý týden
         for (let w = 0; w < weeks; w++) {
           const nextDate = new Date(startD);
           nextDate.setDate(startD.getDate() + (w * 7));
           newItems.push({ date: formatDateKey(nextDate), person, title, time, tag });
         }
       } else if (repeatMode === 'workdays') {
-        // Každý všední den (Po–Pá) po zadaný počet týdnů
         const totalDays = weeks * 7;
         for (let d = 0; d < totalDays; d++) {
           const nextDate = new Date(startD);
           nextDate.setDate(startD.getDate() + d);
           const dayOfWeek = nextDate.getDay();
-          if (dayOfWeek !== 0 && dayOfWeek !== 6) { // bez víkendu
+          if (dayOfWeek !== 0 && dayOfWeek !== 6) {
             newItems.push({ date: formatDateKey(nextDate), person, title, time, tag });
           }
         }
       }
 
-      let synced = false;
-      if (supabase) {
-        try {
-          const { error } = await supabase.from('family_events').insert(newItems);
-          if (!error) {
-            synced = true;
-          } else {
-            showError(`Ukládání selhalo: ${error.message}`);
-          }
-        } catch (err) {
-          showError(`Ukládání selhalo: ${err.message}`);
-        }
-      }
+      try {
+        const res = await fetch(`${SUPABASE_BASE}/family_events`, {
+          method: 'POST',
+          headers: reqHeaders,
+          body: JSON.stringify(newItems)
+        });
 
-      if (!synced) {
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText);
+        }
+
+        await loadEvents();
+      } catch (err) {
+        showError(`Uloženo lokálně (chyba API: ${err.message})`);
         newItems.forEach(item => {
           eventsList.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 4), ...item });
         });
@@ -475,21 +459,21 @@
       saveEventBtn.disabled = false;
       saveEventBtn.textContent = 'Uložit';
       closeModal();
-      if (supabase && synced) loadEvents();
     });
 
     async function deleteEvent(id) {
-      if (supabase) {
-        try {
-          await supabase.from('family_events').delete().eq('id', id);
-        } catch (e) {
-          console.warn("Chyba při mazání:", e);
-        }
+      try {
+        await fetch(`${SUPABASE_BASE}/family_events?id=eq.${id}`, {
+          method: 'DELETE',
+          headers: reqHeaders
+        });
+      } catch (e) {
+        console.warn("Chyba při mazání na serveru:", e);
       }
       eventsList = eventsList.filter(ev => ev.id !== id);
       localStorage.setItem('family_events_local', JSON.stringify(eventsList));
       renderCalendar();
-      if (supabase) loadEvents();
+      loadEvents();
     }
 
     cancelModalBtn.addEventListener('click', closeModal);
@@ -501,9 +485,12 @@
     todayBtn.addEventListener('click', () => { startDate = new Date(); startDate.setHours(0,0,0,0); renderCalendar(); });
     viewDaysSelect.addEventListener('change', (e) => { daysCount = parseInt(e.target.value, 10); renderCalendar(); });
 
+    // Okamžité vykreslení
     renderCalendar();
+    // První načtení
     loadEvents();
-    subscribeToRealtime();
+    // Automatická synchronizace na pozadí každých 5 sekund (mezi všemi členy)
+    setInterval(loadEvents, 5000);
   </script>
 </body>
 </html>
