@@ -75,11 +75,11 @@
       <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="font-bold ml-2">✕</button>
     </div>
 
-    <!-- Hlavní oblast: horizontálně i vertikálně plynulá bez kolize překrývání -->
+    <!-- Hlavní oblast kalendáře -->
     <div class="overflow-x-auto flex-1 flex flex-col">
       <div class="min-w-[340px] sm:min-w-[600px] flex flex-col flex-1">
         
-        <!-- Hlavička sloupců: Pevná na vrcholu obsahu (bez sticky konfliktu) -->
+        <!-- Hlavička sloupců: Barča, Mamka, Táta -->
         <div class="grid grid-cols-[68px_repeat(3,minmax(0,1fr))] sm:grid-cols-[130px_repeat(3,minmax(0,1fr))] bg-slate-100 border-b-2 border-slate-400 font-extrabold text-[11px] sm:text-sm shadow-sm text-slate-800 shrink-0">
           <div class="p-2 sm:p-3 text-center border-r-2 border-slate-300 bg-slate-200/90 flex items-center justify-center tracking-wider uppercase text-[10px] sm:text-[11px] text-slate-600 font-black">Den</div>
           <div class="p-2 sm:p-3 text-center border-r-2 border-slate-300 bg-violet-100/90 text-violet-950 flex items-center justify-center gap-1 sm:gap-2 min-w-0">
@@ -96,13 +96,26 @@
           </div>
         </div>
 
-        <!-- Mřížka kalendáře: První řádek (Dnes) je kompletně volný a viditelný -->
+        <!-- Mřížka kalendáře -->
         <div id="calendarGrid" class="divide-y-2 divide-slate-300 flex-1 print-border">
-          <!-- Dny se vykreslují skriptem -->
+          <!-- Dny -->
         </div>
 
       </div>
     </div>
+
+    <!-- Patička s verzí kódu a stavem synchronizace -->
+    <footer class="px-4 py-2 bg-slate-100 border-t-2 border-slate-300 text-[11px] text-slate-500 flex flex-wrap items-center justify-between gap-2 no-print shrink-0">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-700" id="versionBadge">v1.2.0</span>
+        <span class="text-slate-300">•</span>
+        <span>Rodinný Kalendář</span>
+      </div>
+      <div class="flex items-center gap-3 text-slate-400">
+        <span id="lastSyncTime">Poslední kontrola: načítám...</span>
+      </div>
+    </footer>
+
   </div>
 
   <!-- Modální okno pro novou událost -->
@@ -173,7 +186,7 @@
         <!-- Opakování aktivity -->
         <div class="p-2.5 sm:p-3 bg-slate-100/80 rounded-2xl border-2 border-slate-200 space-y-2">
           <label class="block text-[10px] sm:text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">🔁 Opakování</label>
-          <select id="eventRepeat" class="w-full border-2 border-slate-300 rounded-xl px-2 py-1.5 text-xs font-semibold bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+          <select id="eventRepeat" class="w-full border-2 border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-semibold bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
             <option value="none">Pouze tento den (jednorázově)</option>
             <option value="weekly">Každý týden (stejný den v týdnu)</option>
             <option value="workdays">Každý všední den (Po–Pá)</option>
@@ -196,6 +209,11 @@
   </div>
 
   <script>
+    // ==========================================
+    // 🏷️ VERZE APLIKACE
+    // ==========================================
+    const APP_VERSION = "v1.2.0";
+
     // ==========================================
     // ⚙️ PŘÍMÉ REST ROZHRANÍ PRO SUPABASE
     // ==========================================
@@ -234,6 +252,8 @@
     const syncIndicator = document.getElementById('syncIndicator');
     const errorBanner = document.getElementById('errorBanner');
     const errorMessage = document.getElementById('errorMessage');
+    const versionBadge = document.getElementById('versionBadge');
+    const lastSyncTime = document.getElementById('lastSyncTime');
 
     const eventModal = document.getElementById('eventModal');
     const eventForm = document.getElementById('eventForm');
@@ -251,6 +271,11 @@
     const repeatUntilDate = document.getElementById('repeatUntilDate');
     const saveEventBtn = document.getElementById('saveEventBtn');
     const selectAllMembersBtn = document.getElementById('selectAllMembersBtn');
+
+    // Nastavení odznaku verze
+    if (versionBadge) {
+      versionBadge.textContent = APP_VERSION;
+    }
 
     selectAllMembersBtn.addEventListener('click', () => {
       const checkboxes = document.querySelectorAll('input[name="membersCheck"]');
@@ -401,6 +426,13 @@
         eventsList = data || [];
         setIndicator('Live', 'emerald');
         errorBanner.classList.add('hidden');
+        
+        // Aktualizace času synchronizace
+        const now = new Date();
+        const timeFormatted = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+        if (lastSyncTime) {
+          lastSyncTime.textContent = `Synchronizováno: ${timeFormatted}`;
+        }
       } catch (err) {
         if (eventsList.length === 0) {
           eventsList = JSON.parse(localStorage.getItem('family_events_local') || '[]');
@@ -592,6 +624,7 @@
     });
     viewDaysSelect.addEventListener('change', (e) => { daysCount = parseInt(e.target.value, 10); renderCalendar(); });
 
+    // Prvotní inicializace
     renderCalendar();
     loadEvents();
     setInterval(loadEvents, 5000);
