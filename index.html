@@ -15,16 +15,16 @@
     @media print {
       .no-print { display: none !important; }
       body { background: white !important; padding: 0 !important; }
-      .print-border { border: 1px solid #e2e8f0 !important; }
+      .print-border { border: 2px solid #cbd5e1 !important; }
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen p-2 sm:p-4 md:p-6 antialiased flex flex-col">
+<body class="bg-slate-200/80 text-slate-800 min-h-screen p-2 sm:p-4 md:p-6 antialiased flex flex-col">
   
-  <div class="max-w-7xl mx-auto w-full bg-white rounded-3xl shadow-xl border border-slate-200/80 overflow-hidden flex flex-col flex-1">
+  <div class="max-w-7xl mx-auto w-full bg-white rounded-3xl shadow-2xl border-2 border-slate-300 overflow-hidden flex flex-col flex-1">
     
     <!-- Horní navigační lišta -->
-    <header class="p-4 sm:px-6 bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 no-print">
+    <header class="p-4 sm:px-6 bg-white border-b-2 border-slate-300 sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 no-print shadow-xs">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-100 text-lg">
           🗓️
@@ -33,8 +33,8 @@
           <div class="flex items-center gap-2">
             <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">Rodinný Kalendář</h1>
             <!-- Stav připojení -->
-            <span id="syncIndicator" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Načítám...
+            <span id="syncIndicator" class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-300">
+              <span class="w-2 h-2 rounded-full bg-slate-400"></span> Načítám...
             </span>
           </div>
           <p class="text-xs sm:text-sm font-semibold text-slate-500" id="currentRangeLabel">Plánování</p>
@@ -43,77 +43,77 @@
 
       <!-- Tlačítka posunu -->
       <div class="flex items-center gap-2 ml-auto sm:ml-0">
-        <div class="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-inner">
-          <button id="prevBtn" class="p-1.5 px-3 rounded-lg hover:bg-white text-slate-700 font-semibold transition active:scale-95 shadow-sm hover:shadow">◀</button>
-          <button id="todayBtn" class="px-3 py-1.5 rounded-lg hover:bg-white text-xs sm:text-sm font-bold text-slate-800 transition active:scale-95 shadow-sm hover:shadow">Dnes</button>
-          <button id="nextBtn" class="p-1.5 px-3 rounded-lg hover:bg-white text-slate-700 font-semibold transition active:scale-95 shadow-sm hover:shadow">▶</button>
+        <div class="inline-flex rounded-xl border-2 border-slate-300 bg-slate-100 p-1 shadow-inner">
+          <button id="prevBtn" class="p-1.5 px-3 rounded-lg hover:bg-white text-slate-800 font-bold transition active:scale-95 shadow-xs hover:shadow">◀</button>
+          <button id="todayBtn" class="px-3 py-1.5 rounded-lg hover:bg-white text-xs sm:text-sm font-extrabold text-slate-900 transition active:scale-95 shadow-xs hover:shadow">Dnes</button>
+          <button id="nextBtn" class="p-1.5 px-3 rounded-lg hover:bg-white text-slate-800 font-bold transition active:scale-95 shadow-xs hover:shadow">▶</button>
         </div>
 
-        <select id="viewDays" class="text-xs sm:text-sm font-medium border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 text-slate-700 hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+        <select id="viewDays" class="text-xs sm:text-sm font-bold border-2 border-slate-300 rounded-xl px-3 py-2 bg-slate-50 text-slate-800 hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
           <option value="7">7 dní</option>
           <option value="14" selected>14 dní</option>
           <option value="30">Celý měsíc</option>
         </select>
 
-        <button onclick="window.print()" title="Vytisknout na ledničku" class="p-2 sm:px-3 sm:py-2 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl bg-slate-50 hover:bg-white text-slate-700 shadow-sm transition flex items-center gap-1.5">
-          <span>🖨️️</span> <span class="hidden md:inline">Tisk</span>
+        <button onclick="window.print()" title="Vytisknout na ledničku" class="p-2 sm:px-3 sm:py-2 text-xs sm:text-sm font-bold border-2 border-slate-300 rounded-xl bg-slate-50 hover:bg-white text-slate-800 shadow-xs transition flex items-center gap-1.5">
+          <span>🖨</span> <span class="hidden md:inline">Tisk</span>
         </button>
       </div>
     </header>
 
     <!-- Chybový proužek -->
-    <div id="errorBanner" class="hidden bg-rose-50 border-b border-rose-200 px-4 py-2 text-xs text-rose-700 flex items-center justify-between">
+    <div id="errorBanner" class="hidden bg-rose-50 border-b-2 border-rose-300 px-4 py-2 text-xs text-rose-800 font-medium flex items-center justify-between">
       <span id="errorMessage">Chyba</span>
       <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="font-bold ml-2">✕</button>
     </div>
 
-    <!-- Hlavička sloupců se členy -->
-    <div class="grid grid-cols-[85px_repeat(3,1fr)] sm:grid-cols-[130px_repeat(3,1fr)] bg-slate-50/90 backdrop-blur-md border-b border-slate-200 font-bold text-xs sm:text-sm sticky top-[73px] sm:top-[77px] z-20 shadow-sm text-slate-700">
-      <div class="p-3 text-center border-r border-slate-200 bg-slate-100/60 flex items-center justify-center tracking-wider uppercase text-[11px] text-slate-400">Den</div>
-      <div class="p-3 text-center border-r border-slate-200 bg-sky-50/60 text-sky-900 flex items-center justify-center gap-2">
-        <span class="w-3 h-3 rounded-full bg-sky-500 shadow-sm shadow-sky-200"></span> Táta
+    <!-- Hlavička sloupců se členy: Barča, Mamka, Táta -->
+    <div class="grid grid-cols-[90px_repeat(3,1fr)] sm:grid-cols-[140px_repeat(3,1fr)] bg-slate-100 border-b-2 border-slate-400 font-extrabold text-xs sm:text-sm sticky top-[73px] sm:top-[77px] z-20 shadow-md text-slate-800">
+      <div class="p-3 text-center border-r-2 border-slate-300 bg-slate-200/80 flex items-center justify-center tracking-wider uppercase text-[11px] text-slate-600 font-black">Den</div>
+      <div class="p-3 text-center border-r-2 border-slate-300 bg-violet-100/90 text-violet-950 flex items-center justify-center gap-2">
+        <span class="w-3.5 h-3.5 rounded-full bg-violet-600 ring-2 ring-white"></span> Barča
       </div>
-      <div class="p-3 text-center border-r border-slate-200 bg-rose-50/60 text-rose-900 flex items-center justify-center gap-2">
-        <span class="w-3 h-3 rounded-full bg-rose-500 shadow-sm shadow-rose-200"></span> Máma
+      <div class="p-3 text-center border-r-2 border-slate-300 bg-rose-100/90 text-rose-950 flex items-center justify-center gap-2">
+        <span class="w-3.5 h-3.5 rounded-full bg-rose-600 ring-2 ring-white"></span> Mamka
       </div>
-      <div class="p-3 text-center bg-violet-50/60 text-violet-900 flex items-center justify-center gap-2">
-        <span class="w-3 h-3 rounded-full bg-violet-500 shadow-sm shadow-violet-200"></span> Bára
+      <div class="p-3 text-center bg-sky-100/90 text-sky-950 flex items-center justify-center gap-2">
+        <span class="w-3.5 h-3.5 rounded-full bg-sky-600 ring-2 ring-white"></span> Táta
       </div>
     </div>
 
     <!-- Mřížka kalendáře -->
-    <div id="calendarGrid" class="divide-y divide-slate-100 flex-1 overflow-y-auto print-border">
-      <!-- Dny se vykreslí hned -->
+    <div id="calendarGrid" class="divide-y-2 divide-slate-300 flex-1 overflow-y-auto print-border">
+      <!-- Dny se vykreslují skriptem -->
     </div>
   </div>
 
   <!-- Modální okno pro novou událost -->
-  <div id="eventModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-slate-100 transform transition-all">
+  <div id="eventModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border-2 border-slate-200 transform transition-all">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="text-lg font-bold text-slate-900" id="modalTitle">Nová událost</h3>
-        <button type="button" id="closeModalCross" class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1">✕</button>
+        <h3 class="text-lg font-extrabold text-slate-900" id="modalTitle">Nová událost</h3>
+        <button type="button" id="closeModalCross" class="text-slate-400 hover:text-slate-700 text-xl font-bold p-1">✕</button>
       </div>
-      <p class="text-xs font-semibold text-slate-400 mb-4" id="modalSubtitle">Vyberte podrobnosti</p>
+      <p class="text-xs font-bold text-slate-400 mb-4" id="modalSubtitle">Vyberte podrobnosti</p>
       
       <form id="eventForm" class="space-y-3.5">
         <input type="hidden" id="modalDate">
         <input type="hidden" id="modalPerson">
 
         <div>
-          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Popis / Plán</label>
+          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Popis / Plán</label>
           <input type="text" id="eventTitle" placeholder="např. Trénink, Zubař, Kroužek, Oslava..." required autofocus
-                 class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
+                 class="w-full border-2 border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Čas (nepovinné)</label>
-            <input type="time" id="eventTime" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Čas (nepovinné)</label>
+            <input type="time" id="eventTime" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Štítek / Typ</label>
-            <select id="eventTag" class="w-full border border-slate-200 rounded-xl px-2 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Štítek / Typ</label>
+            <select id="eventTag" class="w-full border-2 border-slate-200 rounded-xl px-2 py-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
               <option value="general">📍 Běžné</option>
               <option value="sport">🏒 Sport / Trénink</option>
               <option value="school">🎒 Škola / Kroužek</option>
@@ -125,17 +125,17 @@
         </div>
 
         <!-- Opakování aktivity -->
-        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
-          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">🔁 Opakování</label>
-          <select id="eventRepeat" class="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+        <div class="p-3 bg-slate-100/80 rounded-2xl border-2 border-slate-200 space-y-2">
+          <label class="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">🔁 Opakování</label>
+          <select id="eventRepeat" class="w-full border-2 border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-semibold bg-white text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
             <option value="none">Pouze tento den (jednorázově)</option>
             <option value="weekly">Každý týden (stejný den v týdnu)</option>
             <option value="workdays">Každý všední den (Po–Pá)</option>
           </select>
 
-          <div id="repeatWeeksWrapper" class="hidden flex items-center justify-between text-xs pt-1 border-t border-slate-200">
-            <span class="text-slate-600 font-medium">Opakovat po dobu:</span>
-            <select id="repeatCount" class="border border-slate-200 rounded-lg px-2 py-1 text-xs bg-white focus:outline-none font-semibold text-slate-700">
+          <div id="repeatWeeksWrapper" class="hidden flex items-center justify-between text-xs pt-1.5 border-t border-slate-200">
+            <span class="text-slate-700 font-bold">Doba trvání:</span>
+            <select id="repeatCount" class="border-2 border-slate-300 rounded-lg px-2 py-1 text-xs bg-white focus:outline-none font-bold text-slate-800">
               <option value="4">4 týdny (1 měsíc)</option>
               <option value="8">8 týdnů (2 měsíce)</option>
               <option value="12" selected>12 týdnů (3 měsíce)</option>
@@ -146,12 +146,12 @@
 
         <div class="pt-0.5">
           <label class="inline-flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" id="eventIsFamily" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
-            <span class="text-xs font-semibold text-slate-700">Týká se celé rodiny (společné)</span>
+            <input type="checkbox" id="eventIsFamily" class="rounded border-slate-400 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+            <span class="text-xs font-bold text-slate-700">Týká se celé rodiny (společné)</span>
           </label>
         </div>
 
-        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
           <button type="button" id="cancelModalBtn" class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition">Zrušit</button>
           <button type="submit" id="saveEventBtn" class="px-5 py-2.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md shadow-indigo-100 transition active:scale-95 flex items-center gap-1.5">
             <span>Uložit</span>
@@ -175,10 +175,11 @@
       "Prefer": "return=representation"
     };
 
+    // Nové pořadí členů: Barča, Mamka, Táta
     const members = [
-      { id: 'tata', name: 'Táta', color: 'sky' },
-      { id: 'mama', name: 'Máma', color: 'rose' },
-      { id: 'barca', name: 'Bára', color: 'violet' }
+      { id: 'barca', name: 'Barča', color: 'violet' },
+      { id: 'mama', name: 'Mamka', color: 'rose' },
+      { id: 'tata', name: 'Táta', color: 'sky' }
     ];
 
     let startDate = new Date();
@@ -251,19 +252,22 @@
 
         const isToday = dateKey === todayKey;
         const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+        const isEven = i % 2 === 0;
 
         const row = document.createElement('div');
-        row.className = `grid grid-cols-[85px_repeat(3,1fr)] sm:grid-cols-[130px_repeat(3,1fr)] min-h-[90px] transition-colors ${
-          isToday ? 'bg-amber-50/40' : (isWeekend ? 'bg-slate-50/70' : 'bg-white')
+        row.className = `grid grid-cols-[90px_repeat(3,1fr)] sm:grid-cols-[140px_repeat(3,1fr)] min-h-[95px] border-b-2 border-slate-300 transition-colors ${
+          isToday 
+            ? 'bg-amber-100/60 ring-2 ring-amber-400 ring-inset' 
+            : (isWeekend ? 'bg-slate-100/90' : (isEven ? 'bg-white' : 'bg-slate-50/70'))
         }`;
 
         const dayCell = document.createElement('div');
-        dayCell.className = `p-2 sm:p-3 border-r border-slate-200 flex flex-col justify-center items-center text-center select-none ${
-          isToday ? 'border-l-4 border-l-amber-500 bg-amber-50/50' : ''
+        dayCell.className = `p-2 sm:p-3 border-r-2 border-slate-300 flex flex-col justify-center items-center text-center select-none ${
+          isToday ? 'border-l-4 border-l-amber-600 bg-amber-200/50' : (isWeekend ? 'bg-slate-200/50' : '')
         }`;
         dayCell.innerHTML = `
-          <span class="text-[10px] sm:text-xs font-bold ${isWeekend ? 'text-rose-500' : 'text-slate-400'} uppercase tracking-wider">${daysNames[d.getDay()]}</span>
-          <span class="text-base sm:text-xl font-extrabold ${isToday ? 'text-amber-600' : 'text-slate-800'} mt-0.5">${d.getDate()}. ${d.getMonth() + 1}.</span>
+          <span class="text-[11px] font-black ${isWeekend ? 'text-rose-600' : 'text-slate-600'} uppercase tracking-wider">${daysNames[d.getDay()]}</span>
+          <span class="text-base sm:text-2xl font-black ${isToday ? 'text-amber-800' : 'text-slate-900'} mt-0.5">${d.getDate()}. ${d.getMonth() + 1}.</span>
         `;
         row.appendChild(dayCell);
 
@@ -271,7 +275,7 @@
 
         members.forEach(m => {
           const cell = document.createElement('div');
-          cell.className = "p-1.5 sm:p-2.5 border-r border-slate-100 last:border-r-0 flex flex-col gap-1.5 relative group hover:bg-slate-50/60 transition cursor-pointer";
+          cell.className = "p-2 border-r-2 border-slate-300 last:border-r-0 flex flex-col gap-1.5 relative group hover:bg-slate-200/40 transition cursor-pointer";
 
           const memberEvents = dayEvents.filter(ev => ev.person === m.id || ev.person === 'all');
           memberEvents.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
@@ -284,19 +288,19 @@
             const evEl = document.createElement('div');
             
             let colorClasses = isFamily
-              ? 'bg-amber-100/80 border-amber-300 text-amber-950 font-medium'
-              : (m.id === 'tata' ? 'bg-sky-50 border-sky-200 text-sky-950' :
-                 m.id === 'mama' ? 'bg-rose-50 border-rose-200 text-rose-950' :
-                 'bg-violet-50 border-violet-200 text-violet-950');
+              ? 'bg-amber-200 border-2 border-amber-400 text-amber-950 font-bold shadow-xs'
+              : (m.id === 'barca' ? 'bg-violet-100 border-2 border-violet-300 text-violet-950 font-semibold shadow-xs' :
+                 m.id === 'mama' ? 'bg-rose-100 border-2 border-rose-300 text-rose-950 font-semibold shadow-xs' :
+                 'bg-sky-100 border-2 border-sky-300 text-sky-950 font-semibold shadow-xs');
 
-            evEl.className = `text-[11px] sm:text-xs px-2 py-1.5 rounded-xl shadow-xs border flex items-center justify-between gap-1 group/item transition-all hover:scale-[1.01] ${colorClasses}`;
+            evEl.className = `text-[11px] sm:text-xs px-2.5 py-1.5 rounded-xl flex items-center justify-between gap-1 group/item transition-all hover:scale-[1.01] ${colorClasses}`;
             
             evEl.innerHTML = `
               <div class="truncate flex items-center gap-1.5">
-                ${ev.time ? `<span class="font-bold opacity-75">${ev.time}</span>` : ''}
+                ${ev.time ? `<span class="font-black opacity-90">${ev.time}</span>` : ''}
                 <span class="truncate">${isFamily ? '⭐ ' : ''}${ev.title}</span>
               </div>
-              <button data-id="${ev.id}" class="text-slate-400 hover:text-rose-600 opacity-0 group-hover/item:opacity-100 transition px-1 font-bold no-print">✕</button>
+              <button data-id="${ev.id}" class="text-slate-500 hover:text-rose-700 opacity-0 group-hover/item:opacity-100 transition px-1 font-black no-print">✕</button>
             `;
 
             evEl.querySelector('button').addEventListener('click', async (e) => {
@@ -310,7 +314,7 @@
           cell.appendChild(eventsContainer);
 
           const addBtn = document.createElement('button');
-          addBtn.className = "mt-auto text-[10px] sm:text-xs font-semibold text-slate-400 opacity-0 group-hover:opacity-100 transition flex items-center gap-1 hover:text-indigo-600 py-1 no-print";
+          addBtn.className = "mt-auto text-[11px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition flex items-center gap-1 hover:text-indigo-700 py-0.5 no-print";
           addBtn.innerHTML = `<span>+ Přidat</span>`;
           cell.appendChild(addBtn);
 
@@ -322,7 +326,6 @@
       }
     }
 
-    // --- PŘÍMÉ VOLÁNÍ API ---
     async function loadEvents() {
       try {
         const controller = new AbortController();
@@ -348,10 +351,10 @@
           eventsList = JSON.parse(localStorage.getItem('family_events_local') || '[]');
         }
         if (err.name === 'AbortError') {
-          setIndicator('Pomalá síť (offline)', 'amber');
+          setIndicator('Pomalá síť', 'amber');
         } else {
-          showError(`Stav připojení: ${err.message}`);
-          setIndicator('Lokální režim', 'rose');
+          showError(`Stav spojení: ${err.message}`);
+          setIndicator('Lokální data', 'rose');
         }
       }
       renderCalendar();
@@ -364,14 +367,14 @@
 
     function setIndicator(text, color) {
       if (color === 'emerald') {
-        syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> ${text}`;
-        syncIndicator.className = 'flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+        syncIndicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> ${text}`;
+        syncIndicator.className = 'flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
       } else if (color === 'rose') {
-        syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> ${text}`;
-        syncIndicator.className = 'flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-50 text-rose-700 border border-rose-200';
+        syncIndicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> ${text}`;
+        syncIndicator.className = 'flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300';
       } else {
-        syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> ${text}`;
-        syncIndicator.className = 'flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200';
+        syncIndicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> ${text}`;
+        syncIndicator.className = 'flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300';
       }
     }
 
@@ -448,7 +451,7 @@
 
         await loadEvents();
       } catch (err) {
-        showError(`Uloženo lokálně (chyba API: ${err.message})`);
+        showError(`Uloženo lokálně (${err.message})`);
         newItems.forEach(item => {
           eventsList.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 4), ...item });
         });
@@ -485,11 +488,8 @@
     todayBtn.addEventListener('click', () => { startDate = new Date(); startDate.setHours(0,0,0,0); renderCalendar(); });
     viewDaysSelect.addEventListener('change', (e) => { daysCount = parseInt(e.target.value, 10); renderCalendar(); });
 
-    // Okamžité vykreslení
     renderCalendar();
-    // První načtení
     loadEvents();
-    // Automatická synchronizace na pozadí každých 5 sekund (mezi všemi členy)
     setInterval(loadEvents, 5000);
   </script>
 </body>
