@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body { 
@@ -21,6 +21,13 @@
       overflow-wrap: anywhere;
       hyphens: auto;
     }
+    @keyframes pulse-ring {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.02); }
+    }
+    .animate-badge {
+      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
     @media print {
       .no-print { display: none !important; }
       body { background: white !important; padding: 0 !important; }
@@ -30,7 +37,28 @@
 </head>
 <body class="bg-slate-200/80 text-slate-800 min-h-screen p-1 sm:p-4 md:p-6 antialiased flex flex-col">
   
-  <div class="max-w-7xl mx-auto w-full bg-white rounded-2xl sm:rounded-3xl shadow-2xl border-2 border-slate-300 overflow-hidden flex flex-col flex-1">
+  <!-- ZÁMEK: Obrazovka autorizace (PIN) -->
+  <div id="authLockScreen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-xs w-full text-center shadow-2xl border-2 border-slate-200">
+      <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-2xl mb-3 shadow-inner">
+        🔒
+      </div>
+      <h2 class="text-lg font-extrabold text-slate-900 mb-1">Rodinný Kalendář</h2>
+      <p class="text-xs text-slate-500 mb-5">Pro přístup zadejte rodinný PIN</p>
+      
+      <form id="authForm" class="space-y-3">
+        <input type="password" id="authPinInput" inputmode="numeric" maxlength="8" placeholder="Zadejte PIN" autofocus
+               class="w-full text-center tracking-widest text-xl font-bold border-2 border-slate-200 rounded-xl py-2.5 focus:border-indigo-600 focus:outline-none bg-slate-50">
+        <p id="authErrorMsg" class="text-xs text-rose-600 font-bold hidden">Nesprávný PIN!</p>
+        <button type="submit" class="w-full py-2.5 bg-indigo-600 text-white font-bold text-sm rounded-xl shadow-md hover:bg-indigo-700 transition active:scale-95">
+          Vstoupit do kalendáře
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- HLAVNÍ APLIKACE (Skrytá do ověření PINu) -->
+  <div id="mainAppContainer" class="hidden max-w-7xl mx-auto w-full bg-white rounded-2xl sm:rounded-3xl shadow-2xl border-2 border-slate-300 overflow-hidden flex flex-col flex-1">
     
     <!-- Horní navigační lišta -->
     <header class="p-3 sm:px-6 bg-white border-b-2 border-slate-300 flex flex-wrap items-center justify-between gap-2 sm:gap-3 no-print shadow-xs shrink-0">
@@ -49,7 +77,7 @@
         </div>
       </div>
 
-      <!-- Tlačítka posunu -->
+      <!-- Tlačítka posunu a filtry -->
       <div class="flex items-center gap-1.5 sm:gap-2 ml-auto">
         <div class="inline-flex rounded-lg sm:rounded-xl border-2 border-slate-300 bg-slate-100 p-0.5 sm:p-1 shadow-inner">
           <button id="prevBtn" class="p-1 sm:p-1.5 px-2 sm:px-3 rounded-md sm:rounded-lg hover:bg-white text-slate-800 font-bold text-xs sm:text-sm transition active:scale-95 shadow-xs">◀</button>
@@ -57,14 +85,19 @@
           <button id="nextBtn" class="p-1 sm:p-1.5 px-2 sm:px-3 rounded-md sm:rounded-lg hover:bg-white text-slate-800 font-bold text-xs sm:text-sm transition active:scale-95 shadow-xs">▶</button>
         </div>
 
+        <!-- Výchozí hodnota je 30 dní (Měsíc) -->
         <select id="viewDays" class="text-xs sm:text-sm font-bold border-2 border-slate-300 rounded-lg sm:rounded-xl px-2 sm:px-3 py-1 sm:py-2 bg-slate-50 text-slate-800 hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
           <option value="7">7 dní</option>
-          <option value="14" selected>14 dní</option>
-          <option value="30">Měsíc</option>
+          <option value="14">14 dní</option>
+          <option value="30" selected>Měsíc</option>
         </select>
 
         <button onclick="window.print()" title="Vytisknout" class="p-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-bold border-2 border-slate-300 rounded-lg sm:rounded-xl bg-slate-50 hover:bg-white text-slate-800 shadow-xs transition flex items-center gap-1">
           <span>🖨</span> <span class="hidden md:inline">Tisk</span>
+        </button>
+        
+        <button id="logoutBtn" title="Zamknout kalendář" class="p-1.5 sm:px-2.5 sm:py-2 text-xs font-bold border-2 border-slate-300 rounded-lg sm:rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-600 transition">
+          🔒
         </button>
       </div>
     </header>
@@ -75,7 +108,7 @@
       <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="font-bold ml-2">✕</button>
     </div>
 
-    <!-- Hlavní oblast kalendáře -->
+    <!-- Scrollovatelný kontejner pro mobil -->
     <div class="overflow-x-auto flex-1 flex flex-col">
       <div class="min-w-[340px] sm:min-w-[600px] flex flex-col flex-1">
         
@@ -104,10 +137,10 @@
       </div>
     </div>
 
-    <!-- Patička s verzí kódu a stavem synchronizace -->
+    <!-- Patička s verzí a synchronizací -->
     <footer class="px-4 py-2 bg-slate-100 border-t-2 border-slate-300 text-[11px] text-slate-500 flex flex-wrap items-center justify-between gap-2 no-print shrink-0">
       <div class="flex items-center gap-2">
-        <span class="font-bold text-slate-700" id="versionBadge">v1.2.0</span>
+        <span class="font-bold text-slate-700" id="versionBadge">v1.3.0</span>
         <span class="text-slate-300">•</span>
         <span>Rodinný Kalendář</span>
       </div>
@@ -118,7 +151,7 @@
 
   </div>
 
-  <!-- Modální okno pro novou událost -->
+  <!-- MODÁL: Nová událost -->
   <div id="eventModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white rounded-3xl p-5 sm:p-6 w-full max-w-md shadow-2xl border-2 border-slate-200 transform transition-all my-auto">
       <div class="flex items-center justify-between mb-1">
@@ -136,7 +169,7 @@
                  class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition">
         </div>
 
-        <!-- Výběr zúčastněných členů rodiny -->
+        <!-- Výběr členů -->
         <div class="p-2.5 sm:p-3 bg-slate-100/80 rounded-2xl border-2 border-slate-200 space-y-1.5">
           <div class="flex items-center justify-between">
             <label class="block text-[10px] sm:text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">👥 Kdo se účastní</label>
@@ -208,14 +241,36 @@
     </div>
   </div>
 
+  <!-- MODÁL: Potvrzení smazání události -->
+  <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl border-2 border-slate-200 text-center space-y-4">
+      <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
+        🗑️
+      </div>
+      <div>
+        <h4 class="text-base font-extrabold text-slate-900">Smazat tuto událost?</h4>
+        <p class="text-xs text-slate-500 mt-1" id="deleteConfirmText">Opravdu chcete událost odstranit?</p>
+      </div>
+      <div class="flex gap-2">
+        <button id="cancelDeleteBtn" class="flex-1 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition border border-slate-200">
+          Zrušit
+        </button>
+        <button id="confirmDeleteBtn" class="flex-1 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md transition">
+          Ano, smazat
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ==========================================
-    // 🏷️ VERZE APLIKACE
+    // 🏷️ VERZE APLIKACE A BEZPEČNOSTNÍ PIN
     // ==========================================
-    const APP_VERSION = "v1.2.0";
+    const APP_VERSION = "v1.3.0";
+    const FAMILY_PIN = "1234"; // Sem si můžeš nastavit libovolný vlastní rodinný kód
 
     // ==========================================
-    // ⚙️ PŘÍMÉ REST ROZHRANÍ PRO SUPABASE
+    // ⚙️ KONFIGURACE REST API PRO SUPABASE
     // ==========================================
     const SUPABASE_BASE = "https://pdricsmhdtjldrbgbvej.supabase.co/rest/v1"; 
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkcmljc21oZHRqbGRyYmdidmVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NjgxNjUsImV4cCI6MjEwNjU0NDE2NX0.LP2-9jFVLIAps7cJ5LuegfzZ2KBBUmWE2ltwgmE8SAE";
@@ -233,15 +288,25 @@
       { id: 'tata', name: 'Táta', color: 'sky' }
     ];
 
+    // VÝCHOZÍ ZOBRAZENÍ: 30 DYS (MĚSÍC)
+    let daysCount = 30;
     let startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
 
-    let daysCount = 14;
     let eventsList = [];
+    let pendingDeleteId = null;
 
     const daysNames = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
     const daysShort = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
     const monthsNames = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
+
+    // DOM elementy
+    const authLockScreen = document.getElementById('authLockScreen');
+    const mainAppContainer = document.getElementById('mainAppContainer');
+    const authForm = document.getElementById('authForm');
+    const authPinInput = document.getElementById('authPinInput');
+    const authErrorMsg = document.getElementById('authErrorMsg');
+    const logoutBtn = document.getElementById('logoutBtn');
 
     const calendarGrid = document.getElementById('calendarGrid');
     const currentRangeLabel = document.getElementById('currentRangeLabel');
@@ -272,11 +337,61 @@
     const saveEventBtn = document.getElementById('saveEventBtn');
     const selectAllMembersBtn = document.getElementById('selectAllMembersBtn');
 
-    // Nastavení odznaku verze
-    if (versionBadge) {
-      versionBadge.textContent = APP_VERSION;
+    const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+    const deleteConfirmText = document.getElementById('deleteConfirmText');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    if (versionBadge) versionBadge.textContent = APP_VERSION;
+
+    // --- AUTORIZACE A ZÁMEK PINEM ---
+    function checkAuth() {
+      const isAuth = localStorage.getItem('family_cal_auth') === 'true';
+      if (isAuth) {
+        authLockScreen.classList.add('hidden');
+        mainAppContainer.classList.remove('hidden');
+        initializeApp();
+      } else {
+        authLockScreen.classList.remove('hidden');
+        mainAppContainer.classList.add('hidden');
+      }
     }
 
+    authForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (authPinInput.value === FAMILY_PIN) {
+        localStorage.setItem('family_cal_auth', 'true');
+        authErrorMsg.classList.add('hidden');
+        checkAuth();
+      } else {
+        authErrorMsg.classList.remove('hidden');
+        authPinInput.value = '';
+        authPinInput.focus();
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('family_cal_auth');
+      checkAuth();
+    });
+
+    // --- SPRÁVA NOTIFIKACÍ (BADGE NA IKONĚ) ---
+    function updateAppBadge(count) {
+      if ('setAppBadge' in navigator) {
+        if (count > 0) {
+          navigator.setAppBadge(count).catch(() => {});
+        } else {
+          navigator.clearAppBadge().catch(() => {});
+        }
+      }
+    }
+
+    // Vyčistit badge při otevření a interakci
+    window.addEventListener('focus', () => {
+      updateAppBadge(0);
+    });
+
+    // --- KALENDÁŘ LOGIKA ---
     selectAllMembersBtn.addEventListener('click', () => {
       const checkboxes = document.querySelectorAll('input[name="membersCheck"]');
       const allChecked = Array.from(checkboxes).every(cb => cb.checked);
@@ -303,6 +418,13 @@
       return timeStr.replace(' - ', '–');
     }
 
+    function isRecentlyCreated(createdAtStr) {
+      if (!createdAtStr) return false;
+      const created = new Date(createdAtStr).getTime();
+      const now = Date.now();
+      return (now - created) < (24 * 60 * 60 * 1000); // vytvořeno za posledních 24 hodin
+    }
+
     function renderCalendar() {
       calendarGrid.innerHTML = '';
 
@@ -314,6 +436,8 @@
       endDate.setDate(startDate.getDate() + daysCount - 1);
 
       currentRangeLabel.textContent = `${startDate.getDate()}. ${monthsNames[startDate.getMonth()]} – ${endDate.getDate()}. ${monthsNames[endDate.getMonth()]} ${endDate.getFullYear()}`;
+
+      let recentEventsCount = 0;
 
       for (let i = 0; i < daysCount; i++) {
         const d = new Date(startDate);
@@ -361,6 +485,9 @@
 
           memberEvents.forEach(ev => {
             const isFamily = ev.person === 'all';
+            const isNew = isRecentlyCreated(ev.created_at);
+            if (isNew) recentEventsCount++;
+
             const evEl = document.createElement('div');
             
             let colorClasses = isFamily
@@ -369,23 +496,32 @@
                  m.id === 'mama' ? 'bg-rose-100 border-2 border-rose-300 text-rose-950 font-semibold shadow-xs' :
                  'bg-sky-100 border-2 border-sky-300 text-sky-950 font-semibold shadow-xs');
 
+            // Pokud je událost nová, zvýrazníme ji pulzujícím rámečkem
+            if (isNew) {
+              colorClasses += ' ring-2 ring-emerald-500 shadow-emerald-200 shadow-sm animate-badge';
+            }
+
             evEl.className = `text-[10px] sm:text-xs p-1.5 rounded-lg sm:rounded-xl flex flex-col gap-0.5 group/item transition-all hover:scale-[1.01] min-w-0 w-full ${colorClasses}`;
             
             const timeLabel = formatTimeDisplay(ev.time);
 
             evEl.innerHTML = `
               <div class="flex items-start justify-between gap-1 w-full min-w-0">
-                ${timeLabel ? `<span class="font-black text-[9px] sm:text-[10px] bg-black/10 px-1 py-0.2 rounded shrink-0 leading-tight">${timeLabel}</span>` : '<span></span>'}
-                <button data-id="${ev.id}" class="text-slate-400 hover:text-rose-700 opacity-60 sm:opacity-0 group-hover/item:opacity-100 transition px-1 font-black no-print leading-none text-xs">✕</button>
+                <div class="flex items-center gap-1 shrink-0">
+                  ${timeLabel ? `<span class="font-black text-[9px] sm:text-[10px] bg-black/10 px-1 py-0.2 rounded shrink-0 leading-tight">${timeLabel}</span>` : ''}
+                  ${isNew ? `<span class="text-[8px] font-black bg-emerald-600 text-white px-1 rounded uppercase tracking-wider">NOVÉ</span>` : ''}
+                </div>
+                <button data-id="${ev.id}" data-title="${encodeURIComponent(ev.title)}" class="delete-trigger text-slate-400 hover:text-rose-700 opacity-60 sm:opacity-0 group-hover/item:opacity-100 transition px-1 font-black no-print leading-none text-xs">✕</button>
               </div>
               <div class="event-text font-bold leading-snug w-full min-w-0">
                 ${isFamily ? '⭐ ' : ''}${ev.title}
               </div>
             `;
 
-            evEl.querySelector('button').addEventListener('click', async (e) => {
+            // Otevření dialogu potvrzení smazání
+            evEl.querySelector('.delete-trigger').addEventListener('click', (e) => {
               e.stopPropagation();
-              await deleteEvent(ev.id);
+              openDeleteModal(ev.id, ev.title);
             });
 
             eventsContainer.appendChild(evEl);
@@ -404,6 +540,9 @@
 
         calendarGrid.appendChild(row);
       }
+
+      // Aktualizace odznaku na ikoně aplikace (počet nových za 24h)
+      updateAppBadge(recentEventsCount);
     }
 
     async function loadEvents() {
@@ -427,7 +566,6 @@
         setIndicator('Live', 'emerald');
         errorBanner.classList.add('hidden');
         
-        // Aktualizace času synchronizace
         const now = new Date();
         const timeFormatted = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
         if (lastSyncTime) {
@@ -494,6 +632,43 @@
       eventModal.classList.remove('flex');
     }
 
+    // --- POTVRZOVACÍ DIALOG SMAZÁNÍ ---
+    function openDeleteModal(id, title) {
+      pendingDeleteId = id;
+      deleteConfirmText.textContent = `Chcete skutečně smazat akci "${title}"?`;
+      deleteConfirmModal.classList.remove('hidden');
+      deleteConfirmModal.classList.add('flex');
+    }
+
+    function closeDeleteModal() {
+      pendingDeleteId = null;
+      deleteConfirmModal.classList.add('hidden');
+      deleteConfirmModal.classList.remove('flex');
+    }
+
+    cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+    confirmDeleteBtn.addEventListener('click', async () => {
+      if (pendingDeleteId) {
+        await executeDeleteEvent(pendingDeleteId);
+        closeDeleteModal();
+      }
+    });
+
+    async function executeDeleteEvent(id) {
+      try {
+        await fetch(`${SUPABASE_BASE}/family_events?id=eq.${id}`, {
+          method: 'DELETE',
+          headers: reqHeaders
+        });
+      } catch (e) {
+        console.warn("Chyba při mazání na serveru:", e);
+      }
+      eventsList = eventsList.filter(ev => ev.id !== id);
+      localStorage.setItem('family_events_local', JSON.stringify(eventsList));
+      renderCalendar();
+      loadEvents();
+    }
+
     eventForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const baseDateStr = modalDate.value;
@@ -557,6 +732,7 @@
       }
 
       const newItems = [];
+      const currentIsoTime = new Date().toISOString();
       datesToCreate.forEach(dStr => {
         selectedMembers.forEach(personId => {
           newItems.push({
@@ -564,7 +740,8 @@
             person: personId,
             title: title,
             time: combinedTime,
-            tag: tag
+            tag: tag,
+            created_at: currentIsoTime
           });
         });
       });
@@ -596,21 +773,6 @@
       closeModal();
     });
 
-    async function deleteEvent(id) {
-      try {
-        await fetch(`${SUPABASE_BASE}/family_events?id=eq.${id}`, {
-          method: 'DELETE',
-          headers: reqHeaders
-        });
-      } catch (e) {
-        console.warn("Chyba při mazání na serveru:", e);
-      }
-      eventsList = eventsList.filter(ev => ev.id !== id);
-      localStorage.setItem('family_events_local', JSON.stringify(eventsList));
-      renderCalendar();
-      loadEvents();
-    }
-
     cancelModalBtn.addEventListener('click', closeModal);
     closeModalCross.addEventListener('click', closeModal);
     eventModal.addEventListener('click', (e) => { if (e.target === eventModal) closeModal(); });
@@ -624,10 +786,14 @@
     });
     viewDaysSelect.addEventListener('change', (e) => { daysCount = parseInt(e.target.value, 10); renderCalendar(); });
 
-    // Prvotní inicializace
-    renderCalendar();
-    loadEvents();
-    setInterval(loadEvents, 5000);
+    function initializeApp() {
+      renderCalendar();
+      loadEvents();
+      setInterval(loadEvents, 5000);
+    }
+
+    // Spuštění kontroly autorizace
+    checkAuth();
   </script>
 </body>
 </html>
